@@ -18,43 +18,6 @@ local main = basalt.addMonitor()
     :setBackground(colors.black)
 
 
--- Funktion um .nfp Bilder zu erstellen
-local function createImages()
-    -- Cherry (Kirsche) - rot
-    local cherry = "eeeeeeee\ne4444eee\n44444444\n44444444\n44444444\n44444444\ne4444eee\neeeeeeee"
-    
-    -- Lemon (Zitrone) - gelb
-    local lemon = "eeeeeeee\neeefffee\neef444fe\nef44444f\nf444444f\nef44444e\neef44fee\neeeeeeee"
-    
-    -- Bell (Glocke) - grau/silber
-    local bell = "eeeeeeee\neee88eee\nee8888ee\ne888888e\ne888888e\ne888888e\nee8888ee\neeeeeeee"
-    
-    -- Bar - weiß
-    local bar = "eeeeeeee\nefffffff\nefffffff\nefffffff\nefffffff\nefffffff\nefffffff\neeeeeeee"
-    
-    -- Seven (7) - gold/gelb
-    local seven = "eeeeeeee\ne444444e\neeeeee4e\neeeee4ee\neee4eee\neee4eeee\nee4eeeee\ne4eeeeee"
-    
-    -- Bilder als Dateien speichern
-    local images = {
-        cherry = cherry,
-        lemon = lemon,
-        bell = bell,
-        bar = bar,
-        seven = seven
-    }
-    
-    for name, data in pairs(images) do
-        local file = fs.open(name .. ".nfp", "w")
-        file.write(data)
-        file.close()
-    end
-end
-
--- Erstelle Bilder beim ersten Start
-if not fs.exists("cherry.nfp") then
-    createImages()
-end
 
 -- Slot symbols - jetzt Bildpfade anstatt Zahlen
 local symbols = {"cherry", "lemon", "bell", "bar", "seven"}
