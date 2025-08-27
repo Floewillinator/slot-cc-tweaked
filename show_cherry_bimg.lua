@@ -1,4 +1,4 @@
--- Zeigt cherry.bimg auf bis zu 4 Monitoren an (robuste Dateisuche, kein Basalt)
+-- Zeigt cherry.bimg auf bis zu 4 Monitoren an (sucht im aktuellen Ordner, robustes Parsen)
 
 local bimgFile = "cherry.bimg"
 
@@ -16,31 +16,34 @@ if #monitors == 0 then
     return
 end
 
--- Robust: Suche nach cherry.bimg in verschiedenen Schreibweisen
+-- Suche nach cherry.bimg im aktuellen Arbeitsverzeichnis (shell.dir())
 local function findBimgFile()
-    local files = fs.list(".")
+    local dir = shell and shell.dir and shell.dir() or "."
+    local files = fs.list(dir)
     for _, f in ipairs(files) do
         if f:lower() == "cherry.bimg" then
-            return f
+            return fs.combine(dir, f)
         end
     end
     return nil
 end
 
 local actualBimgFile = findBimgFile()
-if not actualBimgFile then
+if not actualBimgFile or not fs.exists(actualBimgFile) then
     print("Datei cherry.bimg nicht gefunden! (Groß-/Kleinschreibung prüfen)")
     print("Gefundene Dateien im Ordner:")
-    for _, f in ipairs(fs.list(".")) do print(" - " .. f) end
+    local dir = shell and shell.dir and shell.dir() or "."
+    for _, f in ipairs(fs.list(dir)) do print(" - " .. f) end
     return
 end
 
--- Load BIMG file (as JSON)
+-- Load BIMG file (as Lua table, not JSON!)
 local file = fs.open(actualBimgFile, "r")
 local content = file.readAll()
 file.close()
 
-local ok, bimg = pcall(textutils.unserializeJSON, content)
+-- Try to parse as Lua table (BIMG-Export aus CC-Tools ist oft kein JSON!)
+local ok, bimg = pcall(function() return textutils.unserialize(content) end)
 if not ok or type(bimg) ~= "table" or not bimg[1] then
     print("Fehler beim Parsen von " .. actualBimgFile .. "!")
     return
