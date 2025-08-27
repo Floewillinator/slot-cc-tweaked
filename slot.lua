@@ -178,8 +178,8 @@ end
 -- Einsatz-Konfiguration
 local EINSATZ_ITEM = "minecraft:emerald_block"
 local EINSATZ_ANZAHL = 5
-local CHEST_EINSATZ = peripheral.find("minecraft:chest") -- Einsatz-Quelle (normale Chest)
-local CHEST_AUSZAHLUNG = peripheral.find("sophisticated_storage:oak_diamond_chest") -- Ziel (Oak Diamond Chest)
+local CHEST_EINSATZ = peripheral.wrap("front") -- Einsatz-Quelle (normale Chest vorne)
+local CHEST_AUSZAHLUNG = peripheral.wrap("back") -- Ziel (Oak Diamond Chest hinten)
 
 -- Hilfsfunktion: Zählt Items in einer Chest
 local function countItemInChest(chest, itemName)
