@@ -105,7 +105,7 @@ end
 
 setMonitorPalette(monitor)
 
--- Funktion: NFP laden und als "Pixelgrafik" in SlotBox anzeigen (angepasst für 3x3 Monitor, nutzt gesamten Screen)
+-- Funktion: NFP laden und als "Pixelgrafik" in SlotBox anzeigen (direkt auf den Monitor, OHNE slotBox:removeChildren!)
 local function setSlotSymbol(slotBox, slotLabel, symbolName)
     local nfpFile = symbolName .. ".nfp"
     local dir = shell and shell.dir and shell.dir() or "."
@@ -117,7 +117,7 @@ local function setSlotSymbol(slotBox, slotLabel, symbolName)
             break
         end
     end
-    slotBox:removeChildren()
+    -- Entferne NICHT die Children, sonst wird das Bild sofort wieder gelöscht!
     if not foundFile or not fs.exists(foundFile) then
         slotBox:addLabel()
             :setText("???")
@@ -136,10 +136,7 @@ local function setSlotSymbol(slotBox, slotLabel, symbolName)
     end
     file.close()
 
-    -- Für 3x3 Monitor: SlotBox-Größe proportional größer wählen
     local boxW, boxH = slotBox:getSize()
-    -- Wenn der Monitor sehr groß ist, nutze die tatsächliche SlotBox-Größe
-    -- (z.B. 13x11 bei 3x3 Monitoren, siehe show_cherry_bimg)
     local fw = #(nfpLines[1] or "")
     local fh = #nfpLines
     if fw == 0 or fh == 0 then return end
