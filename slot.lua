@@ -135,7 +135,7 @@ local function drawUI(resultText, resultColor)
     monitor.setBackgroundColor(colors.green)
     monitor.write("SPIN!")
     -- Einsatz-Anzeige
-    local einsatzText = "Einsatz: " .. tostring(einsatz)
+    local einsatzText = "Einsatz: " .. tostring(einsatz or 0)
     monitor.setCursorPos(math.floor((w - #einsatzText) / 2) + 1, einsatzLabelY)
     monitor.setTextColor(colors.cyan)
     monitor.setBackgroundColor(colors.black)
