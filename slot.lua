@@ -1,4 +1,4 @@
--- Slot machine for ComputerCraft (ohne Basalt, nur native APIs, für Monitor)
+-- Slot machine for ComputerCraft (ohne Basalt, Slotbilder wie in show_cherry_bimg.lua)
 
 local monitor = peripheral.find("monitor")
 if not monitor then error("No monitor found!") end
@@ -11,12 +11,12 @@ local symbols = {"cherry", "lemon", "bell", "pineapple", "seven"}
 local slot1, slot2, slot3 = "cherry", "lemon", "bell"
 local isSpinning = false
 
--- Slotbox-Layout (für 3x3 Monitor)
+-- Slotbox-Layout (wie in show_cherry_bimg.lua)
 local boxW, boxH = 13, 11
 local gap = 4
 local totalWidth = boxW * 3 + gap * 2
 local xStart = math.floor((w - totalWidth) / 2) + 1
-local yStart = 4
+local yStart = math.floor((h - boxH) / 2) + 1
 
 -- Button-Layout
 local buttonW, buttonH = math.max(18, math.floor(w * 0.5)), 3
@@ -60,12 +60,22 @@ local function charToColor(c)
     return 2 ^ n
 end
 
--- Draw NFP image at (x0, y0) with size (boxW, boxH)
+-- Draw NFP image at (x0, y0) with size (boxW, boxH) (wie in show_cherry_bimg.lua)
 local function drawNfpSymbol(symbolName, x0, y0, boxW, boxH)
     local nfpFile = symbolName .. ".nfp"
-    if not fs.exists(nfpFile) then return end
+    -- Suche im aktuellen Arbeitsverzeichnis (wie show_cherry_bimg)
+    local dir = shell and shell.dir and shell.dir() or "."
+    local files = fs.list(dir)
+    local foundFile = nil
+    for _, f in ipairs(files) do
+        if f:lower() == nfpFile:lower() then
+            foundFile = fs.combine(dir, f)
+            break
+        end
+    end
+    if not foundFile or not fs.exists(foundFile) then return end
     local nfpLines = {}
-    local file = fs.open(nfpFile, "r")
+    local file = fs.open(foundFile, "r")
     while true do
         local line = file.readLine()
         if not line then break end
@@ -77,15 +87,15 @@ local function drawNfpSymbol(symbolName, x0, y0, boxW, boxH)
     if fw == 0 or fh == 0 then return end
     for fy = 1, fh do
         local line = nfpLines[fy]
-        local yStart = math.floor((fy - 1) * boxH / fh) + 1
-        local yEnd = math.floor(fy * boxH / fh)
+        local yStartPix = math.floor((fy - 1) * boxH / fh) + 1
+        local yEndPix = math.floor(fy * boxH / fh)
         for fx = 1, fw do
             local c = line:sub(fx, fx)
             local col = charToColor(c)
-            local xStart = math.floor((fx - 1) * boxW / fw) + 1
-            local xEnd = math.floor(fx * boxW / fw)
-            for y = yStart, yEnd do
-                for x = xStart, xEnd do
+            local xStartPix = math.floor((fx - 1) * boxW / fw) + 1
+            local xEndPix = math.floor(fx * boxW / fw)
+            for y = yStartPix, yEndPix do
+                for x = xStartPix, xEndPix do
                     monitor.setCursorPos(x0 + x - 1, y0 + y - 1)
                     monitor.setBackgroundColor(col)
                     monitor.write(" ")
