@@ -141,6 +141,16 @@ local symbolValues = {
     seven = 20       -- 20x Einsatz
 }
 
+-- Symbolwahrscheinlichkeiten (je häufiger, desto wahrscheinlicher)
+-- Die Reihenfolge und Häufigkeit bestimmt die Wahrscheinlichkeit!
+local weightedSymbols = {
+    "cherry","cherry","cherry","cherry","cherry","cherry", -- 6
+    "lemon","lemon","lemon","lemon",                       -- 4
+    "bell","bell","bell",                                  -- 3
+    "pineapple","pineapple",                               -- 2
+    "seven"                                                -- 1
+}
+
 -- Auszahlungstabelle als Text generieren
 local function drawAuszahlungstabelle()
     local tabelle = {
@@ -368,7 +378,7 @@ local function showOverlay(text, color, duration)
     drawUI()
 end
 
--- Animation/Spin (angepasst: Overlay für "Nicht genug Einsatz!")
+-- Animation/Spin (angepasst: Symbolauswahl nach Gewichtung)
 local function spin()
     if isSpinning then return end
     if not einsatzEinziehen() then
@@ -378,9 +388,9 @@ local function spin()
     isSpinning = true
     drawUI("Spinning...", colors.white)
     for i = 1, 15 do
-        if i <= 10 then slot1 = symbols[math.random(1, #symbols)] end
-        if i <= 12 then slot2 = symbols[math.random(1, #symbols)] end
-        slot3 = symbols[math.random(1, #symbols)]
+        if i <= 10 then slot1 = weightedSymbols[math.random(1, #weightedSymbols)] end
+        if i <= 12 then slot2 = weightedSymbols[math.random(1, #weightedSymbols)] end
+        slot3 = weightedSymbols[math.random(1, #weightedSymbols)]
         drawUI("Spinning...", colors.white)
         playSpinSound()
         if i <= 5 then sleep(0.1)
