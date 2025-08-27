@@ -60,7 +60,7 @@ local function charToColor(c)
     return 2 ^ n
 end
 
--- Draw the frame on a monitor, scaling to fill the monitor
+-- Draw the frame on a monitor, scaling to fill the monitor (Pixel-Block-Skalierung)
 local function drawFrameScaled(monitor)
     monitor.setTextScale(0.5)
     monitor.setBackgroundColor(colors.black)
@@ -69,34 +69,36 @@ local function drawFrameScaled(monitor)
     local fw = #(text[1] or "")
     local fh = #text
 
-    -- Avoid division by zero
     if fw == 0 or fh == 0 then return end
 
-    -- Calculate scaling factors
-    local scaleX = mw / fw
-    local scaleY = mh / fh
-
-    for y = 1, mh do
-        -- Map monitor y to frame y
-        local fy = math.floor((y - 1) / scaleY) + 1
+    -- Für jeden "Pixel" im BIMG-Bild berechne den Bereich auf dem Monitor
+    for fy = 1, fh do
         local t = text[fy] or ""
         local fgLine = fg[fy] or ""
         local bgLine = bg[fy] or ""
-        for x = 1, mw do
-            local fx = math.floor((x - 1) / scaleX) + 1
+        -- y-Bereich auf Monitor
+        local yStart = math.floor((fy - 1) * mh / fh) + 1
+        local yEnd = math.floor(fy * mh / fh)
+        for fx = 1, fw do
             local ch = t:sub(fx, fx)
             local fgCol = charToColor(fgLine:sub(fx, fx))
             local bgCol = charToColor(bgLine:sub(fx, fx))
-            monitor.setCursorPos(x, y)
-            -- Only draw the character if it is not a space, otherwise draw a space with bg color
-            if ch ~= "" and ch ~= " " and ch ~= "0" then
-                monitor.setTextColor(fgCol)
-                monitor.setBackgroundColor(bgCol)
-                monitor.write(ch)
-            else
-                monitor.setTextColor(bgCol)
-                monitor.setBackgroundColor(bgCol)
-                monitor.write(" ")
+            -- x-Bereich auf Monitor
+            local xStart = math.floor((fx - 1) * mw / fw) + 1
+            local xEnd = math.floor(fx * mw / fw)
+            for y = yStart, yEnd do
+                for x = xStart, xEnd do
+                    monitor.setCursorPos(x, y)
+                    if ch ~= "" and ch ~= " " and ch ~= "0" then
+                        monitor.setTextColor(fgCol)
+                        monitor.setBackgroundColor(bgCol)
+                        monitor.write(ch)
+                    else
+                        monitor.setTextColor(bgCol)
+                        monitor.setBackgroundColor(bgCol)
+                        monitor.write(" ")
+                    end
+                end
             end
         end
     end
