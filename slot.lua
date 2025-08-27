@@ -43,6 +43,9 @@ local einsatzButtonW, einsatzButtonH = 7, 3
 local einsatzButtonX = math.floor((w - einsatzButtonW) / 2) + 1
 local einsatzButtonY = einsatzLabelY + 2
 local resultY = einsatzButtonY + einsatzButtonH + 1
+local minResultY = yStart + boxH + 2 -- mindestens direkt unter den Slotboxen
+if resultY < minResultY then resultY = minResultY end
+if resultY > h then resultY = h end
 
 -- Farbpalette setzen (wichtig für NFP)
 local function setMonitorPalette(monitor)
@@ -220,9 +223,11 @@ local function drawUI(resultText, resultColor)
     monitor.setTextColor(colors.white)
     monitor.setBackgroundColor(colors.blue)
     monitor.write("EINSATZ")
-    -- Result
+    -- Result (immer sichtbar, ggf. nach oben verschoben)
     if resultText then
-        monitor.setCursorPos(math.floor((w - #resultText) / 2) + 1, resultY)
+        local ry = resultY
+        if ry > h then ry = h end
+        monitor.setCursorPos(math.floor((w - #resultText) / 2) + 1, ry)
         monitor.setTextColor(resultColor or colors.yellow)
         monitor.setBackgroundColor(colors.black)
         monitor.write(resultText)
@@ -339,13 +344,35 @@ local function gewinnAuszahlen(symbol, einsatzWert)
     end
 end
 
--- Animation/Spin (angepasst: Gewinn auszahlen bei Win)
+-- Zeigt eine temporäre Einblendung (Overlay) auf dem Monitor an
+local function showOverlay(text, color, duration)
+    local overlayW = #text + 4
+    local overlayH = 3
+    local overlayX = math.floor((w - overlayW) / 2) + 1
+    local overlayY = math.floor((h - overlayH) / 2) + 1
+
+    -- Zeichne Overlay-Hintergrund
+    for oy = 0, overlayH - 1 do
+        monitor.setCursorPos(overlayX, overlayY + oy)
+        monitor.setBackgroundColor(colors.gray)
+        monitor.setTextColor(colors.white)
+        monitor.write(string.rep(" ", overlayW))
+    end
+    -- Zeichne Text mittig im Overlay
+    monitor.setCursorPos(overlayX + 2, overlayY + 1)
+    monitor.setBackgroundColor(colors.gray)
+    monitor.setTextColor(color or colors.yellow)
+    monitor.write(text)
+    sleep(duration or 1)
+    -- Nach Ablauf: UI neu zeichnen
+    drawUI()
+end
+
+-- Animation/Spin (angepasst: Overlay für "Nicht genug Einsatz!")
 local function spin()
     if isSpinning then return end
     if not einsatzEinziehen() then
-        drawUI("Nicht genug Einsatz!", colors.red)
-        sleep(1)
-        drawUI()
+        showOverlay("Nicht genug Einsatz!", colors.red, 1.5)
         return
     end
     isSpinning = true
