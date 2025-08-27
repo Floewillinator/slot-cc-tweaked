@@ -180,6 +180,16 @@ local EINSATZ_ITEM = "minecraft:emerald_block"
 local EINSATZ_ANZAHL = 5
 local CHEST_EINSATZ = peripheral.wrap("front") -- Einsatz-Quelle (normale Chest vorne)
 local CHEST_AUSZAHLUNG = peripheral.wrap("back") -- Ziel (Oak Diamond Chest hinten)
+local CHEST_AUSGABE = peripheral.wrap("left") -- Gewinn-Ausgabe (links)
+
+-- Symbolwerte-Tabelle (Multiplikator für Gewinn, kann mit variablem Einsatz umgehen)
+local symbolValues = {
+    cherry = 2,      -- 2x Einsatz
+    lemon = 3,       -- 3x Einsatz
+    bell = 5,        -- 5x Einsatz
+    pineapple = 10,  -- 10x Einsatz
+    seven = 20       -- 20x Einsatz
+}
 
 -- Hilfsfunktion: Zählt Items in einer Chest
 local function countItemInChest(chest, itemName)
@@ -220,7 +230,24 @@ local function einsatzEinziehen()
     return moved == EINSATZ_ANZAHL
 end
 
--- Animation/Spin (angepasst: Einsatz prüfen/ziehen)
+-- Gewinn auszahlen (verschiebt Gewinnmenge in CHEST_AUSGABE)
+local function gewinnAuszahlen(symbol, einsatz)
+    if not CHEST_AUSGABE then return end
+    local multi = symbolValues[symbol] or 0
+    local gewinn = einsatz * multi
+    -- Versuche so viele Emerald Blocks wie Gewinn aus der Auszahlungskiste nach links zu verschieben
+    local left = gewinn
+    for slot, item in pairs(CHEST_AUSZAHLUNG.list()) do
+        if item.name == EINSATZ_ITEM then
+            local toMove = math.min(item.count, left)
+            local moved = CHEST_AUSZAHLUNG.pushItems(peripheral.getName(CHEST_AUSGABE), slot, toMove)
+            left = left - moved
+            if left <= 0 then break end
+        end
+    end
+end
+
+-- Animation/Spin (angepasst: Gewinn auszahlen bei Win)
 local function spin()
     if isSpinning then return end
     if not einsatzEinziehen() then
@@ -246,6 +273,7 @@ local function spin()
     drawUI(msg, col)
     if col == colors.lime then
         playWinSound()
+        gewinnAuszahlen(slot1, EINSATZ_ANZAHL)
     else
         playLoseSound()
     end
