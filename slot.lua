@@ -174,12 +174,13 @@ local function drawLogo()
     end
 end
 
--- Hilfsfunktion: Zählt Items in einer Chest
+-- Hilfsfunktion: Zählt Items in einer Chest (fix: nutze .getItemDetail statt .list für modded Chests)
 local function countItemInChest(chest, itemName)
     if not chest then return 0 end
     local total = 0
-    for slot, item in pairs(chest.list()) do
-        if item.name == itemName then
+    for slot = 1, chest.size() do
+        local item = chest.getItemDetail(slot)
+        if item and item.name == itemName then
             total = total + item.count
         end
     end
