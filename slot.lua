@@ -170,7 +170,10 @@ local function setSlotSymbol(slotBox, slotLabel, symbolName)
         return 2 ^ n
     end
 
-    -- "Pixelgrafik" als Labels in SlotBox zeichnen
+    -- Ermittle das Monitor-Objekt (direkt aus main, nicht aus slotBox)
+    local win = monitor
+    local absX, absY = slotBox:getPosition()
+    -- Pixelgrafik direkt auf den Monitor zeichnen
     for fy = 1, fh do
         local line = nfpLines[fy]
         local yStart = math.floor((fy - 1) * boxH / fh) + 1
@@ -182,14 +185,9 @@ local function setSlotSymbol(slotBox, slotLabel, symbolName)
             local xEnd = math.floor(fx * boxW / fw)
             for y = yStart, yEnd do
                 for x = xStart, xEnd do
-                    -- Ein Label pro Pixel ist zu langsam, daher nutze window-API direkt:
-                    local win = slotBox:getBase():getMonitor() or slotBox:getBase():getTerm()
-                    if win then
-                        local absX, absY = slotBox:getPosition()
-                        win.setCursorPos(absX + x - 1, absY + y - 1)
-                        win.setBackgroundColor(col)
-                        win.write(" ")
-                    end
+                    win.setCursorPos(absX + x - 1, absY + y - 1)
+                    win.setBackgroundColor(col)
+                    win.write(" ")
                 end
             end
         end
