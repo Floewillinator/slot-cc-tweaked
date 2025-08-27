@@ -105,7 +105,7 @@ end
 
 setMonitorPalette(monitor)
 
--- Funktion: NFP als Basalt-Image anzeigen (empfohlen von Basalt-Doku)
+-- Funktion: NFP als Basalt-Image anzeigen (robust für Basalt 1.6+)
 local function setSlotSymbol(slotBox, slotLabel, symbolName)
     local nfpFile = symbolName .. ".nfp"
     local dir = shell and shell.dir and shell.dir() or "."
@@ -123,16 +123,17 @@ local function setSlotSymbol(slotBox, slotLabel, symbolName)
             :setText("???")
             :setForeground(colors.red)
             :setBackground(colors.white)
-            :setPosition(math.floor(slotBox:getSize()/2), math.floor(slotBox:getSize()/2))
+            :setPosition( math.floor((select(1, slotBox:getSize())-3)/2)+1, math.floor((select(2, slotBox:getSize())-1)/2)+1 )
         return
     end
 
-    -- Basalt-Image-Objekt verwenden
+    -- Basalt-Image-Objekt verwenden (ohne resizeImage, nur loadImage und setSize)
+    local w, h = slotBox:getSize()
     local img = slotBox:addImage()
         :setPosition(1, 1)
-        :setSize(select(1, slotBox:getSize()), select(2, slotBox:getSize()))
+        :setSize(w, h)
     img:loadImage(foundFile)
-    img:resizeImage(select(1, slotBox:getSize()), select(2, slotBox:getSize()))
+    -- img:resizeImage(w, h) -- NICHT aufrufen, da dies bei NFP zu Fehlern führen kann!
 end
 
 -- Initiale Symbole setzen
