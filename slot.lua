@@ -151,6 +151,30 @@ local function checkWin()
     end
 end
 
+-- Speaker support
+local speaker = peripheral.find("speaker")
+
+local function playSpinSound()
+    if speaker then
+        -- Play a short note block sound for spinning
+        speaker.playSound("block.note_block.hat", 1, 1)
+    end
+end
+
+local function playWinSound()
+    if speaker then
+        -- Play a level up sound for win
+        speaker.playSound("entity.player.levelup", 1, 1)
+    end
+end
+
+local function playLoseSound()
+    if speaker then
+        -- Play a bass note for lose
+        speaker.playSound("block.note_block.bass", 1, 0.7)
+    end
+end
+
 -- Animation/Spin
 local function spin()
     if isSpinning then return end
@@ -161,6 +185,7 @@ local function spin()
         if i <= 12 then slot2 = symbols[math.random(1, #symbols)] end
         slot3 = symbols[math.random(1, #symbols)]
         drawUI("Spinning...", colors.white)
+        playSpinSound()
         if i <= 5 then sleep(0.1)
         elseif i <= 10 then sleep(0.2)
         else sleep(0.3) end
@@ -168,6 +193,11 @@ local function spin()
     isSpinning = false
     local msg, col = checkWin()
     drawUI(msg, col)
+    if col == colors.lime then
+        playWinSound()
+    else
+        playLoseSound()
+    end
 end
 
 -- Main event loop
