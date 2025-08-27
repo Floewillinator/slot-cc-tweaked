@@ -11,25 +11,22 @@ local symbols = {"cherry", "lemon", "bell", "pineapple", "seven"}
 local slot1, slot2, slot3 = "cherry", "lemon", "bell"
 local isSpinning = false
 
--- Slotbox-Layout (weiter nach oben schieben)
+-- Slotbox-Layout (weiter nach unten schieben, Platz für Auszahlungstabelle oben)
 local boxW, boxH = 13, 11
 local gap = 4
 local totalWidth = boxW * 3 + gap * 2
-local xStart = math.floor((w - totalWidth) / 2) + 1
-local yStart = 3 -- war: math.floor((h - boxH) / 2) + 1
+local auszahlungY = 2 -- Startzeile für Auszahlungstabelle
+local auszahlungHeight = 5 -- Zeilen für Auszahlungstabelle
+local yStart = auszahlungY + auszahlungHeight + 1
 
 -- Button-Layout (weiter nach unten)
 local buttonW, buttonH = math.max(18, math.floor(w * 0.5)), 3
 local buttonX = math.floor((w - buttonW) / 2) + 1
 local buttonY = yStart + boxH + 2
-
--- Einsatz-Anzeige und -Button darunter
 local einsatzLabelY = buttonY + buttonH + 1
 local einsatzButtonW, einsatzButtonH = 7, 3
 local einsatzButtonX = math.floor((w - einsatzButtonW) / 2) + 1
 local einsatzButtonY = einsatzLabelY + 2
-
--- Result-Label darunter
 local resultY = einsatzButtonY + einsatzButtonH + 1
 
 -- Farbpalette setzen (wichtig für NFP)
@@ -111,14 +108,31 @@ local function drawNfpSymbol(symbolName, x0, y0, boxW, boxH)
     end
 end
 
--- Draw slot UI (symbols, button, einsatz, result)
+-- Auszahlungstabelle als Text generieren
+local function drawAuszahlungstabelle()
+    local tabelle = {
+        {"Symbol", "Multiplikator"},
+        {"Kirsche", "x" .. symbolValues.cherry},
+        {"Zitrone", "x" .. symbolValues.lemon},
+        {"Glocke", "x" .. symbolValues.bell},
+        {"Ananas", "x" .. symbolValues.pineapple},
+        {"Sieben", "x" .. symbolValues.seven}
+    }
+    local startX = math.floor((w - 22) / 2) + 1
+    for i, row in ipairs(tabelle) do
+        monitor.setCursorPos(startX, auszahlungY + i - 1)
+        monitor.setTextColor(i == 1 and colors.yellow or colors.white)
+        monitor.setBackgroundColor(colors.black)
+        monitor.write(string.format("%-12s %8s", row[1], row[2]))
+    end
+end
+
+-- Draw slot UI (symbols, button, einsatz, result, auszahlungstabelle)
 local function drawUI(resultText, resultColor)
     monitor.setBackgroundColor(colors.black)
     monitor.clear()
-    -- Title
-    monitor.setCursorPos(math.floor((w - 13) / 2) + 1, 1)
-    monitor.setTextColor(colors.yellow)
-    monitor.write("SLOT MACHINE")
+    -- Auszahlungstabelle oben
+    drawAuszahlungstabelle()
     -- Slotboxes
     drawNfpSymbol(slot1, xStart, yStart, boxW, boxH)
     drawNfpSymbol(slot2, xStart + boxW + gap, yStart, boxW, boxH)
