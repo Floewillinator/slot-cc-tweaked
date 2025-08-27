@@ -19,8 +19,8 @@ local main = basalt.addMonitor()
     :setSize(w, h)
     :setBackground(colors.black)
 
--- Slot symbols - jetzt Bildpfade anstatt Zahlen
-local symbols = {"cherry", "lemon", "bell", "bar", "seven"}
+-- Slot symbols - jetzt NFP-Dateinamen
+local symbols = {"cherry", "lemon", "bell", "pineapple", "seven"}
 
 -- Current slot values - setze auf richtige Symbol-Namen
 local slot1 = "cherry"
@@ -123,68 +123,76 @@ end
 
 debugListBimgFiles()
 
--- Function to set symbols - use ASCII art as fallback for slot symbols
+-- Funktion: NFP laden und als "Pixelgrafik" in SlotBox anzeigen (wie in show_cherry_bimg.lua)
 local function setSlotSymbol(slotBox, slotLabel, symbolName)
-    -- Simple ASCII art for slot symbols (3x3)
-    local asciiData = {
-        cherry = {
-            lines = {
-                " o o ",
-                "ooooo",
-                " ooo "
-            },
-            color = colors.red
-        },
-        lemon = {
-            lines = {
-                "     ",
-                " ooo ",
-                "ooooo"
-            },
-            color = colors.yellow
-        },
-        bell = {
-            lines = {
-                "  o  ",
-                " ooo ",
-                "ooooo"
-            },
-            color = colors.yellow
-        },
-        bar = {
-            lines = {
-                "#####",
-                "#####",
-                "#####"
-            },
-            color = colors.blue
-        },
-        seven = {
-            lines = {
-                "77777",
-                "   7 ",
-                "  7  "
-            },
-            color = colors.orange
-        },
-        default = {
-            lines = {
-                " ??? ",
-                " ??? ",
-                " ??? "
-            },
-            color = colors.gray
-        }
-    }
-    local data = asciiData[symbolName] or asciiData.default
+    local nfpFile = symbolName .. ".nfp"
+    -- Suche im aktuellen Arbeitsverzeichnis
+    local dir = shell and shell.dir and shell.dir() or "."
+    local files = fs.list(dir)
+    local foundFile = nil
+    for _, f in ipairs(files) do
+        if f:lower() == nfpFile:lower() then
+            foundFile = fs.combine(dir, f)
+            break
+        end
+    end
     slotBox:removeChildren()
-    -- Draw ASCII art using multiple labels for each line
-    for i, line in ipairs(data.lines) do
+    if not foundFile or not fs.exists(foundFile) then
+        -- Fallback: ASCII-Text
         slotBox:addLabel()
-            :setText(line)
-            :setForeground(data.color)
+            :setText("???")
+            :setForeground(colors.red)
             :setBackground(colors.white)
-            :setPosition(3, 2 + i)
+            :setPosition(4, 4)
+        return
+    end
+
+    -- NFP laden
+    local nfpLines = {}
+    local file = fs.open(foundFile, "r")
+    while true do
+        local line = file.readLine()
+        if not line then break end
+        table.insert(nfpLines, line)
+    end
+    file.close()
+
+    -- SlotBox-Größe (wie im Frame)
+    local boxW, boxH = slotBox:getSize()
+    local fw = #(nfpLines[1] or "")
+    local fh = #nfpLines
+    if fw == 0 or fh == 0 then return end
+
+    -- Helper: Convert char to color (0-9,a-f)
+    local function charToColor(c)
+        local n = tonumber(c, 16)
+        if n == nil then return colors.black end
+        return 2 ^ n
+    end
+
+    -- "Pixelgrafik" als Labels in SlotBox zeichnen
+    for fy = 1, fh do
+        local line = nfpLines[fy]
+        local yStart = math.floor((fy - 1) * boxH / fh) + 1
+        local yEnd = math.floor(fy * boxH / fh)
+        for fx = 1, fw do
+            local c = line:sub(fx, fx)
+            local col = charToColor(c)
+            local xStart = math.floor((fx - 1) * boxW / fw) + 1
+            local xEnd = math.floor(fx * boxW / fw)
+            for y = yStart, yEnd do
+                for x = xStart, xEnd do
+                    -- Ein Label pro Pixel ist zu langsam, daher nutze window-API direkt:
+                    local win = slotBox:getBase():getMonitor() or slotBox:getBase():getTerm()
+                    if win then
+                        local absX, absY = slotBox:getPosition()
+                        win.setCursorPos(absX + x - 1, absY + y - 1)
+                        win.setBackgroundColor(col)
+                        win.write(" ")
+                    end
+                end
+            end
+        end
     end
 end
 
@@ -239,38 +247,28 @@ end
 -- Function to spin the slots
 local function spin()
     if isSpinning then return end
-    
+
     isSpinning = true
     resultLabel:setText("Spinning...")
     resultLabel:setForeground(colors.white)
-    
-    -- Animation function for the thread
+
     local function animate()
         for i = 1, 15 do
-            -- All reels spin for first 10 iterations
             if i <= 10 then
                 slot1 = symbols[math.random(1, #symbols)]
                 setSlotSymbol(slotBox1, slotLabel1, slot1)
             end
-            
-            -- Middle reel spins for 12 iterations
             if i <= 12 then
                 slot2 = symbols[math.random(1, #symbols)]
                 setSlotSymbol(slotBox2, slotLabel2, slot2)
             end
-            
-            -- Last reel spins for all 15 iterations
             slot3 = symbols[math.random(1, #symbols)]
             setSlotSymbol(slotBox3, slotLabel3, slot3)
-            
-            -- Visual feedback when reels stop
             if i == 10 then
                 slotBox1:setBackground(colors.lightGray)
             elseif i == 12 then
                 slotBox2:setBackground(colors.lightGray)
             end
-            
-            -- Delay between spins
             if i <= 5 then
                 os.sleep(0.1)
             elseif i <= 10 then
@@ -279,13 +277,10 @@ local function spin()
                 os.sleep(0.3)
             end
         end
-        
-        -- Final result
         isSpinning = false
         checkWin()
     end
-    
-    -- Create and start animation thread
+
     local animationThread = main:addThread()
     animationThread:start(animate)
 end
