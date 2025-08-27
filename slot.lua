@@ -135,7 +135,7 @@ local function drawUI(resultText, resultColor)
     monitor.setBackgroundColor(colors.green)
     monitor.write("SPIN!")
     -- Einsatz-Anzeige
-    local einsatzText = "Einsatz: " .. tostring(einsatz or 0)
+    local einsatzText = "Einsatz: " .. tostring(_G.einsatz)
     monitor.setCursorPos(math.floor((w - #einsatzText) / 2) + 1, einsatzLabelY)
     monitor.setTextColor(colors.cyan)
     monitor.setBackgroundColor(colors.black)
@@ -207,7 +207,7 @@ end
 local EINSATZ_ITEM = "minecraft:emerald_block"
 local EINSATZ_MIN = 1
 local EINSATZ_MAX = 20
-local einsatz = 5 -- aktueller Einsatz (statt EINSATZ_ANZAHL)
+_G.einsatz = 5 -- global, damit drawUI immer den aktuellen Wert sieht
 
 local CHEST_EINSATZ = peripheral.wrap("front")
 local CHEST_AUSZAHLUNG = peripheral.wrap("back")
@@ -251,14 +251,14 @@ end
 
 -- Überprüft ob genug Einsatz vorhanden ist
 local function einsatzMoeglich()
-    return CHEST_EINSATZ and CHEST_AUSZAHLUNG and countItemInChest(CHEST_EINSATZ, EINSATZ_ITEM) >= einsatz
+    return CHEST_EINSATZ and CHEST_AUSZAHLUNG and countItemInChest(CHEST_EINSATZ, EINSATZ_ITEM) >= _G.einsatz
 end
 
 -- Zieht Einsatz ab und verschiebt ihn in die Auszahlungskiste
 local function einsatzEinziehen()
     if not einsatzMoeglich() then return false end
-    local moved = takeItemFromChest(CHEST_EINSATZ, EINSATZ_ITEM, einsatz)
-    return moved == einsatz
+    local moved = takeItemFromChest(CHEST_EINSATZ, EINSATZ_ITEM, _G.einsatz)
+    return moved == _G.einsatz
 end
 
 -- Gewinn auszahlen (verschiebt Gewinnmenge in CHEST_AUSGABE)
@@ -303,7 +303,7 @@ local function spin()
     drawUI(msg, col)
     if col == colors.lime then
         playWinSound()
-        gewinnAuszahlen(slot1, einsatz)
+        gewinnAuszahlen(slot1, _G.einsatz)
     else
         playLoseSound()
     end
@@ -317,16 +317,16 @@ while true do
         if isInButton(x, y) and not isSpinning then
             spin()
         elseif isInEinsatzButton(x, y) and not isSpinning then
-            einsatz = einsatz + 1
-            if einsatz > EINSATZ_MAX then einsatz = EINSATZ_MIN end
+            _G.einsatz = _G.einsatz + 1
+            if _G.einsatz > EINSATZ_MAX then _G.einsatz = EINSATZ_MIN end
             drawUI()
         end
     elseif e == "mouse_click" then
         if isInButton(x, y) and not isSpinning then
             spin()
         elseif isInEinsatzButton(x, y) and not isSpinning then
-            einsatz = einsatz + 1
-            if einsatz > EINSATZ_MAX then einsatz = EINSATZ_MIN end
+            _G.einsatz = _G.einsatz + 1
+            if _G.einsatz > EINSATZ_MAX then _G.einsatz = EINSATZ_MIN end
             drawUI()
         end
     end
