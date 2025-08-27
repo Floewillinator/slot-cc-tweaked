@@ -175,9 +175,60 @@ local function playLoseSound()
     end
 end
 
--- Animation/Spin
+-- Einsatz-Konfiguration
+local EINSATZ_ITEM = "minecraft:emerald_block"
+local EINSATZ_ANZAHL = 5
+local CHEST_EINSATZ = peripheral.find("minecraft:chest") -- Einsatz-Quelle (normale Chest)
+local CHEST_AUSZAHLUNG = peripheral.find("sophisticated_storage:oak_diamond_chest") -- Ziel (Oak Diamond Chest)
+
+-- Hilfsfunktion: Zählt Items in einer Chest
+local function countItemInChest(chest, itemName)
+    if not chest then return 0 end
+    local total = 0
+    for slot, item in pairs(chest.list()) do
+        if item.name == itemName then
+            total = total + item.count
+        end
+    end
+    return total
+end
+
+-- Hilfsfunktion: Entnimmt eine bestimmte Anzahl Items aus einer Chest
+local function takeItemFromChest(chest, itemName, count)
+    if not chest then return 0 end
+    local left = count
+    for slot, item in pairs(chest.list()) do
+        if item.name == itemName then
+            local toMove = math.min(item.count, left)
+            local moved = chest.pushItems(peripheral.getName(CHEST_AUSZAHLUNG), slot, toMove)
+            left = left - moved
+            if left <= 0 then return count end
+        end
+    end
+    return count - left
+end
+
+-- Überprüft ob genug Einsatz vorhanden ist
+local function einsatzMoeglich()
+    return CHEST_EINSATZ and CHEST_AUSZAHLUNG and countItemInChest(CHEST_EINSATZ, EINSATZ_ITEM) >= EINSATZ_ANZAHL
+end
+
+-- Zieht Einsatz ab und verschiebt ihn in die Auszahlungskiste
+local function einsatzEinziehen()
+    if not einsatzMoeglich() then return false end
+    local moved = takeItemFromChest(CHEST_EINSATZ, EINSATZ_ITEM, EINSATZ_ANZAHL)
+    return moved == EINSATZ_ANZAHL
+end
+
+-- Animation/Spin (angepasst: Einsatz prüfen/ziehen)
 local function spin()
     if isSpinning then return end
+    if not einsatzEinziehen() then
+        drawUI("Nicht genug Einsatz!", colors.red)
+        sleep(1)
+        drawUI()
+        return
+    end
     isSpinning = true
     drawUI("Spinning...", colors.white)
     for i = 1, 15 do
