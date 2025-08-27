@@ -101,17 +101,4 @@ end
 print(actualNfpFile .. " wurde skaliert auf " .. #monitors .. " Monitor(en) angezeigt.")
 print("Drücke eine Taste zum Beenden.")
 os.pullEvent("key")
-    end
-    monitor.setCursorPos(1, 1)
-    monitor.setTextColor(colors.white)
-    monitor.setBackgroundColor(colors.black)
-end
 
--- Draw on all found monitors, scaled to fill
-for i, mon in ipairs(monitors) do
-    drawFrameScaled(mon)
-end
-
-print(actualBimgFile .. " wurde skaliert auf " .. #monitors .. " Monitor(en) angezeigt.")
-print("Drücke eine Taste zum Beenden.")
-os.pullEvent("key")
