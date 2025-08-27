@@ -59,7 +59,7 @@ local function charToColor(c)
     return 2 ^ n
 end
 
--- Draw the NFP on a monitor, scaling to a slot box size (jetzt 30x24 für 3x3 Monitore)
+-- Draw the NFP on a monitor, scaling to a slot box size (angepasst für 3x3 Monitor wie im Slot-Skript)
 local function drawNfpSlotBox(monitor, x0, y0, boxW, boxH)
     local fw = #(nfpLines[1] or "")
     local fh = #nfpLines
@@ -85,15 +85,16 @@ local function drawNfpSlotBox(monitor, x0, y0, boxW, boxH)
     end
 end
 
--- Draw on all found monitors, 3 slot boxes nebeneinander (wie im Slot-Skript, aber größer)
+-- Draw on all found monitors, 3 slot boxes nebeneinander (wie im Slot-Skript, aber für 3x3 Monitor)
 for i, mon in ipairs(monitors) do
     mon.setTextScale(0.5)
     mon.setBackgroundColor(colors.black)
     mon.clear()
     local w, h = mon.getSize()
-    local boxW, boxH = 30, 24 -- 3x3 Monitor: Slotbox 3x so groß
-    local gap = 3
-    -- Berechne Startpositionen für 3 Slot-Boxen mittig auf dem Monitor
+    -- Ziel: Slotboxen proportional wie im Original (10x8), aber für 3x3 Monitor (Breite ca. 48, Höhe ca. 27)
+    -- 3 Boxen + 2 Gaps, Boxen ca. 13 breit, 11 hoch, Gap 4
+    local boxW, boxH = 13, 11
+    local gap = 4
     local totalWidth = boxW * 3 + gap * 2
     local xStart = math.floor((w - totalWidth) / 2) + 1
     local yStart = math.floor((h - boxH) / 2) + 1
@@ -102,7 +103,7 @@ for i, mon in ipairs(monitors) do
     drawNfpSlotBox(mon, xStart + (boxW + gap) * 2, yStart, boxW, boxH)
 end
 
-print(actualNfpFile .. " wurde als großes Slot-Symbol (3x) auf " .. #monitors .. " Monitor(en) angezeigt.")
+print(actualNfpFile .. " wurde als Slot-Symbol (3x, skaliert für 3x3 Monitor) auf " .. #monitors .. " Monitor(en) angezeigt.")
 print("Drücke eine Taste zum Beenden.")
 os.pullEvent("key")
 
