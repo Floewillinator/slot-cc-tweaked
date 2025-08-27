@@ -108,15 +108,24 @@ local function drawNfpSymbol(symbolName, x0, y0, boxW, boxH)
     end
 end
 
+-- Symbolwerte-Tabelle (Multiplikator für Gewinn, kann mit variablem Einsatz umgehen)
+local symbolValues = {
+    cherry = 2,      -- 2x Einsatz
+    lemon = 3,       -- 3x Einsatz
+    bell = 5,        -- 5x Einsatz
+    pineapple = 10,  -- 10x Einsatz
+    seven = 20       -- 20x Einsatz
+}
+
 -- Auszahlungstabelle als Text generieren
 local function drawAuszahlungstabelle()
     local tabelle = {
         {"Symbol", "Multiplikator"},
-        {"Kirsche", "x" .. (symbolValues.cherry or "?")},
-        {"Zitrone", "x" .. (symbolValues.lemon or "?")},
-        {"Glocke", "x" .. (symbolValues.bell or "?")},
-        {"Ananas", "x" .. (symbolValues.pineapple or "?")},
-        {"Sieben", "x" .. (symbolValues.seven or "?")}
+        {"Kirsche", "x" .. symbolValues.cherry},
+        {"Zitrone", "x" .. symbolValues.lemon},
+        {"Glocke", "x" .. symbolValues.bell},
+        {"Ananas", "x" .. symbolValues.pineapple},
+        {"Sieben", "x" .. symbolValues.seven}
     }
     local startX = math.floor((w - 22) / 2) + 1
     for i, row in ipairs(tabelle) do
@@ -227,14 +236,7 @@ local CHEST_EINSATZ = peripheral.wrap("front")
 local CHEST_AUSZAHLUNG = peripheral.wrap("back")
 local CHEST_AUSGABE = peripheral.wrap("left")
 
--- Symbolwerte-Tabelle (Multiplikator für Gewinn, kann mit variablem Einsatz umgehen)
-local symbolValues = {
-    cherry = 2,      -- 2x Einsatz
-    lemon = 3,       -- 3x Einsatz
-    bell = 5,        -- 5x Einsatz
-    pineapple = 10,  -- 10x Einsatz
-    seven = 20       -- 20x Einsatz
-}
+
 
 -- Hilfsfunktion: Zählt Items in einer Chest
 local function countItemInChest(chest, itemName)
