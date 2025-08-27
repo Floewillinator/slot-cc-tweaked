@@ -1,4 +1,4 @@
--- Zeigt cherry.bimg auf bis zu 4 Monitoren an (sucht im aktuellen Ordner, robustes Parsen)
+-- Zeigt cherry.bimg auf bis zu 4 Monitoren an, nutzt den gesamten Monitorbereich (kein Basalt)
 
 local bimgFile = "cherry.bimg"
 
@@ -42,7 +42,6 @@ local file = fs.open(actualBimgFile, "r")
 local content = file.readAll()
 file.close()
 
--- Try to parse as Lua table (BIMG-Export aus CC-Tools ist oft kein JSON!)
 local ok, bimg = pcall(function() return textutils.unserialize(content) end)
 if not ok or type(bimg) ~= "table" or not bimg[1] then
     print("Fehler beim Parsen von " .. actualBimgFile .. "!")
@@ -61,28 +60,43 @@ local function charToColor(c)
     return 2 ^ n
 end
 
--- Draw the frame on a monitor at (x0, y0)
-local function drawFrame(monitor, x0, y0)
+-- Draw the frame on a monitor, scaling to fill the monitor
+local function drawFrameScaled(monitor)
     monitor.setTextScale(0.5)
     monitor.setBackgroundColor(colors.black)
     monitor.clear()
-    for y = 1, #text do
-        local t = text[y] or ""
-        local fgLine = fg[y] or ""
-        local bgLine = bg[y] or ""
-        for x = 1, #t do
-            local ch = t:sub(x, x)
-            -- If text is only spaces, draw a space with bg color only
-            if ch == " " then
-                monitor.setCursorPos(x0 + x - 1, y0 + y - 1)
-                monitor.setTextColor(colors.white)
-                monitor.setBackgroundColor(charToColor(bgLine:sub(x, x)))
-                monitor.write(" ")
-            else
-                monitor.setCursorPos(x0 + x - 1, y0 + y - 1)
-                monitor.setTextColor(charToColor(fgLine:sub(x, x)))
-                monitor.setBackgroundColor(charToColor(bgLine:sub(x, x)))
+    local mw, mh = monitor.getSize()
+    local fw = #(text[1] or "")
+    local fh = #text
+
+    -- Avoid division by zero
+    if fw == 0 or fh == 0 then return end
+
+    -- Calculate scaling factors
+    local scaleX = mw / fw
+    local scaleY = mh / fh
+
+    for y = 1, mh do
+        -- Map monitor y to frame y
+        local fy = math.floor((y - 1) / scaleY) + 1
+        local t = text[fy] or ""
+        local fgLine = fg[fy] or ""
+        local bgLine = bg[fy] or ""
+        for x = 1, mw do
+            local fx = math.floor((x - 1) / scaleX) + 1
+            local ch = t:sub(fx, fx)
+            local fgCol = charToColor(fgLine:sub(fx, fx))
+            local bgCol = charToColor(bgLine:sub(fx, fx))
+            monitor.setCursorPos(x, y)
+            -- Only draw the character if it is not a space, otherwise draw a space with bg color
+            if ch ~= "" and ch ~= " " and ch ~= "0" then
+                monitor.setTextColor(fgCol)
+                monitor.setBackgroundColor(bgCol)
                 monitor.write(ch)
+            else
+                monitor.setTextColor(bgCol)
+                monitor.setBackgroundColor(bgCol)
+                monitor.write(" ")
             end
         end
     end
@@ -91,16 +105,11 @@ local function drawFrame(monitor, x0, y0)
     monitor.setBackgroundColor(colors.black)
 end
 
--- Draw on all found monitors, centered
+-- Draw on all found monitors, scaled to fill
 for i, mon in ipairs(monitors) do
-    local w, h = mon.getSize()
-    local fw = #(text[1] or "")
-    local fh = #text
-    local x0 = math.floor((w - fw) / 2) + 1
-    local y0 = math.floor((h - fh) / 2) + 1
-    drawFrame(mon, x0, y0)
+    drawFrameScaled(mon)
 end
 
-print(actualBimgFile .. " wurde auf " .. #monitors .. " Monitor(en) angezeigt.")
+print(actualBimgFile .. " wurde skaliert auf " .. #monitors .. " Monitor(en) angezeigt.")
 print("Drücke eine Taste zum Beenden.")
 os.pullEvent("key")
