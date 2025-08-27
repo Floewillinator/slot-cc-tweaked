@@ -149,9 +149,14 @@ local function drawUI(resultText, resultColor)
     -- Auszahlungstabelle oben
     drawAuszahlungstabelle()
     -- Slotboxes
-    drawNfpSymbol(slot1, xStart, yStart, boxW, boxH)
-    drawNfpSymbol(slot2, xStart + boxW + gap, yStart, boxW, boxH)
-    drawNfpSymbol(slot3, xStart + (boxW + gap) * 2, yStart, boxW, boxH)
+    local safe_xStart = tonumber(xStart) or 1
+    local safe_yStart = tonumber(yStart) or 1
+    local safe_boxW = tonumber(boxW) or 1
+    local safe_boxH = tonumber(boxH) or 1
+    local safe_gap = tonumber(gap) or 0
+    drawNfpSymbol(slot1, safe_xStart, safe_yStart, safe_boxW, safe_boxH)
+    drawNfpSymbol(slot2, safe_xStart + safe_boxW + safe_gap, safe_yStart, safe_boxW, safe_boxH)
+    drawNfpSymbol(slot3, safe_xStart + (safe_boxW + safe_gap) * 2, safe_yStart, safe_boxW, safe_boxH)
     -- Spin Button
     for by = 0, buttonH - 1 do
         monitor.setCursorPos(buttonX, buttonY + by)
