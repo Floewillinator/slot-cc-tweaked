@@ -16,11 +16,15 @@ local boxW, boxH = 13, 11
 local gap = 4
 local totalWidth = boxW * 3 + gap * 2
 
--- Logo (ASCII-Art, 3 Zeilen, jetzt "AMK" in ASCII, gelb)
+-- Logo (ASCII-Art, 7 Zeilen, "AMK" in gelb)
 local logoLines = {
-    "   ███    ████   ██  ██ ",
-    "  ██ ██  ██  ██  ██ ██  ",
-    "  ██ ██  ████   ██  ██  "
+    "   #    #     # #    # ",
+    "  # #   ##   ## #   #  ",
+    " #   #  # # # # #  #   ",
+    "#     # #  #  # ###    ",
+    "####### #     # #  #   ",
+    "#     # #     # #   #  ",
+    "#     # #     # #    # "
 }
 local logoHeight = #logoLines
 local auszahlungY = logoHeight + 2 -- Startzeile für Auszahlungstabelle (nach Logo)
