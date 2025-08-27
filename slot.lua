@@ -65,6 +65,12 @@ end
 
 -- Draw NFP image at (x0, y0) with size (boxW, boxH) (wie in show_cherry_bimg.lua)
 local function drawNfpSymbol(symbolName, x0, y0, boxW, boxH)
+    -- Sicherstellen, dass alle Parameter gesetzt sind
+    x0 = tonumber(x0) or 1
+    y0 = tonumber(y0) or 1
+    boxW = tonumber(boxW) or 1
+    boxH = tonumber(boxH) or 1
+
     local nfpFile = symbolName .. ".nfp"
     -- Suche im aktuellen Arbeitsverzeichnis (wie show_cherry_bimg)
     local dir = shell and shell.dir and shell.dir() or "."
