@@ -158,7 +158,8 @@ local function drawUI(resultText, resultColor)
     monitor.setBackgroundColor(colors.green)
     monitor.write("SPIN!")
     -- Einsatz-Anzeige
-    local einsatzText = "Einsatz: " .. tostring(_G.einsatz)
+    local einsatzVal = tonumber(_G.einsatz) or 0
+    local einsatzText = "Einsatz: " .. tostring(einsatzVal)
     monitor.setCursorPos(math.floor((w - #einsatzText) / 2) + 1, einsatzLabelY)
     monitor.setTextColor(colors.cyan)
     monitor.setBackgroundColor(colors.black)
@@ -333,6 +334,7 @@ while true do
         if isInButton(x, y) and not isSpinning then
             spin()
         elseif isInEinsatzButton(x, y) and not isSpinning then
+            _G.einsatz = tonumber(_G.einsatz) or 1
             _G.einsatz = _G.einsatz + 1
             if _G.einsatz > EINSATZ_MAX then _G.einsatz = EINSATZ_MIN end
             drawUI()
@@ -341,6 +343,7 @@ while true do
         if isInButton(x, y) and not isSpinning then
             spin()
         elseif isInEinsatzButton(x, y) and not isSpinning then
+            _G.einsatz = tonumber(_G.einsatz) or 1
             _G.einsatz = _G.einsatz + 1
             if _G.einsatz > EINSATZ_MAX then _G.einsatz = EINSATZ_MIN end
             drawUI()
