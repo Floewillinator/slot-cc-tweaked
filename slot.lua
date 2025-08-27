@@ -104,78 +104,87 @@ end
 
 setMonitorPalette(monitor)
 
--- Function to set symbols - use only Basalt BIMG images, force a redraw and add debug info
-local function setSlotSymbol(slotBox, slotLabel, symbolName)
-    local symbolData = {
-        cherry = {text = "C", color = colors.red},
-        lemon = {text = "L", color = colors.yellow},
-        bell = {text = "B", color = colors.lightGray},
-        bar = {text = "B", color = colors.white},
-        seven = {text = "7", color = colors.orange}
-    }
-    local data = symbolData[symbolName] or {text = "?", color = colors.black}
-    slotBox:removeChildren()
-    local imageObject = slotBox:addImage()
-        :setPosition(1, 1)
-    local bimgPath = symbolName .. ".bimg"
-    local loaded = false
-    if fs.exists(bimgPath) then
-        local ok, err = pcall(function()
-            imageObject:loadImage(bimgPath)
-            -- Force redraw by selecting frame (even if only one)
-            if imageObject.getFrameCount and imageObject:getFrameCount() > 0 then
-                imageObject:selectFrame(1)
-            end
-            -- Debug: print frame count and metadata
-            if imageObject.getFrameCount then
-                print(symbolName .. ".bimg frame count: " .. tostring(imageObject:getFrameCount()))
-            end
-            if imageObject.getMetadata then
-                local meta = imageObject:getMetadata()
-                print(symbolName .. ".bimg metadata: " .. textutils.serialize(meta))
-            end
-        end)
-        if ok then
-            print("Successfully loaded and displayed image: " .. bimgPath)
-            loaded = true
-        else
-            print("Error rendering image: " .. tostring(err))
-            imageObject:remove()
+-- Utility: Print all .bimg files in current directory for debugging
+local function debugListBimgFiles()
+    local currentDir = shell.dir and shell.dir() or "."
+    print("DEBUG: Listing .bimg files in: " .. currentDir)
+    local found = false
+    for _, name in ipairs(fs.list(currentDir)) do
+        print("DEBUG: File: " .. name)
+        if name:lower():match("%.bimg$") then
+            print(" - " .. name)
+            found = true
         end
     end
-    if not loaded then
-        print("BIMG image file not found or failed: " .. bimgPath)
-        local label = slotBox:addLabel()
-            :setText(data.text)
-            :setForeground(data.color)
-            :setBackground(colors.white)
-            :setPosition(4, 3)
-            :setSize(3, 3)
-        return false
+    if not found then
+        print("No .bimg files found in: " .. currentDir)
     end
-    return true
 end
 
--- DEBUG: Draw BIMG directly on the main frame (ohne slotBox) zum Test
-local function debugDrawBimg(symbolName, x, y)
-    local imageObject = main:addImage()
-        :setPosition(x, y)
-    local bimgPath = symbolName .. ".bimg"
-    if fs.exists(bimgPath) then
-        local ok, err = pcall(function()
-            imageObject:loadImage(bimgPath)
-            if imageObject.getFrameCount and imageObject:getFrameCount() > 0 then
-                imageObject:selectFrame(1)
-            end
-        end)
-        if ok then
-            print("DEBUG: BIMG '"..bimgPath.."' drawn at ("..x..","..y..")")
-        else
-            print("DEBUG: Error rendering BIMG: " .. tostring(err))
-            imageObject:remove()
-        end
-    else
-        print("DEBUG: BIMG not found: " .. bimgPath)
+debugListBimgFiles()
+
+-- Function to set symbols - use ASCII art as fallback for slot symbols
+local function setSlotSymbol(slotBox, slotLabel, symbolName)
+    -- Simple ASCII art for slot symbols (3x3)
+    local asciiData = {
+        cherry = {
+            lines = {
+                " o o ",
+                "ooooo",
+                " ooo "
+            },
+            color = colors.red
+        },
+        lemon = {
+            lines = {
+                "     ",
+                " ooo ",
+                "ooooo"
+            },
+            color = colors.yellow
+        },
+        bell = {
+            lines = {
+                "  o  ",
+                " ooo ",
+                "ooooo"
+            },
+            color = colors.yellow
+        },
+        bar = {
+            lines = {
+                "#####",
+                "#####",
+                "#####"
+            },
+            color = colors.blue
+        },
+        seven = {
+            lines = {
+                "77777",
+                "   7 ",
+                "  7  "
+            },
+            color = colors.orange
+        },
+        default = {
+            lines = {
+                " ??? ",
+                " ??? ",
+                " ??? "
+            },
+            color = colors.gray
+        }
+    }
+    local data = asciiData[symbolName] or asciiData.default
+    slotBox:removeChildren()
+    -- Draw ASCII art using multiple labels for each line
+    for i, line in ipairs(data.lines) do
+        slotBox:addLabel()
+            :setText(line)
+            :setForeground(data.color)
+            :setBackground(colors.white)
+            :setPosition(3, 2 + i)
     end
 end
 
@@ -183,11 +192,6 @@ end
 setSlotSymbol(slotBox1, slotLabel1, slot1)
 setSlotSymbol(slotBox2, slotLabel2, slot2)
 setSlotSymbol(slotBox3, slotLabel3, slot3)
-
--- DEBUG: Draw test images directly on the main frame (bypassing slotBox)
-debugDrawBimg("cherry", 1, 1)
-debugDrawBimg("lemon", 10, 1)
-debugDrawBimg("bell", 19, 1)
 
 -- Create spin button
 local spinButton = main:addButton()
@@ -292,24 +296,6 @@ spinButton:onClick(function()
 end)
 
 
--- Remove the testImageRendering function that was causing issues
--- and simplify the debug output
-local function printDebugInfo()
-    local currentDir = shell.dir()
-    print("Current directory: " .. currentDir)
-    print("NFP files should be in: " .. currentDir)
-    
-    local fileCount = 0
-    for _, name in ipairs(fs.list(currentDir)) do
-        if name:match("%.nfp$") then
-            fileCount = fileCount + 1
-            print("Found: " .. name)
-        end
-    end
-    
-    print("Total NFP files found: " .. fileCount)
-end
-printDebugInfo()
 
 -- Start the program
 basalt.autoUpdate()
