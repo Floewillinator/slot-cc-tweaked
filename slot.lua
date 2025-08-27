@@ -105,7 +105,7 @@ end
 
 setMonitorPalette(monitor)
 
--- Funktion: NFP laden und als "Pixelgrafik" in SlotBox anzeigen (direkt auf den Monitor, OHNE slotBox:removeChildren!)
+-- Funktion: NFP als Basalt-Image anzeigen (empfohlen von Basalt-Doku)
 local function setSlotSymbol(slotBox, slotLabel, symbolName)
     local nfpFile = symbolName .. ".nfp"
     local dir = shell and shell.dir and shell.dir() or "."
@@ -117,56 +117,22 @@ local function setSlotSymbol(slotBox, slotLabel, symbolName)
             break
         end
     end
-    -- Entferne NICHT die Children, sonst wird das Bild sofort wieder gelöscht!
+    slotBox:removeChildren()
     if not foundFile or not fs.exists(foundFile) then
         slotBox:addLabel()
             :setText("???")
             :setForeground(colors.red)
             :setBackground(colors.white)
-            :setPosition(4, 4)
+            :setPosition(math.floor(slotBox:getSize()/2), math.floor(slotBox:getSize()/2))
         return
     end
 
-    local nfpLines = {}
-    local file = fs.open(foundFile, "r")
-    while true do
-        local line = file.readLine()
-        if not line then break end
-        table.insert(nfpLines, line)
-    end
-    file.close()
-
-    local boxW, boxH = slotBox:getSize()
-    local fw = #(nfpLines[1] or "")
-    local fh = #nfpLines
-    if fw == 0 or fh == 0 then return end
-
-    local function charToColor(c)
-        local n = tonumber(c, 16)
-        if n == nil then return colors.black end
-        return 2 ^ n
-    end
-
-    local win = monitor
-    local absX, absY = slotBox:getPosition()
-    for fy = 1, fh do
-        local line = nfpLines[fy]
-        local yStart = math.floor((fy - 1) * boxH / fh) + 1
-        local yEnd = math.floor(fy * boxH / fh)
-        for fx = 1, fw do
-            local c = line:sub(fx, fx)
-            local col = charToColor(c)
-            local xStart = math.floor((fx - 1) * boxW / fw) + 1
-            local xEnd = math.floor(fx * boxW / fw)
-            for y = yStart, yEnd do
-                for x = xStart, xEnd do
-                    win.setCursorPos(absX + x - 1, absY + y - 1)
-                    win.setBackgroundColor(col)
-                    win.write(" ")
-                end
-            end
-        end
-    end
+    -- Basalt-Image-Objekt verwenden
+    local img = slotBox:addImage()
+        :setPosition(1, 1)
+        :setSize(select(1, slotBox:getSize()), select(2, slotBox:getSize()))
+    img:loadImage(foundFile)
+    img:resizeImage(select(1, slotBox:getSize()), select(2, slotBox:getSize()))
 end
 
 -- Initiale Symbole setzen
@@ -238,6 +204,40 @@ local function spin()
             end
             if i <= 12 then
                 slot2 = symbols[math.random(1, #symbols)]
+                setSlotSymbol(slotBox2, slotLabel2, slot2)
+            end
+            slot3 = symbols[math.random(1, #symbols)]
+            setSlotSymbol(slotBox3, slotLabel3, slot3)
+            if i == 10 then
+                slotBox1:setBackground(colors.lightGray)
+            elseif i == 12 then
+                slotBox2:setBackground(colors.lightGray)
+            end
+            if i <= 5 then
+                os.sleep(0.1)
+            elseif i <= 10 then
+                os.sleep(0.2)
+            else
+                os.sleep(0.3)
+            end
+        end
+        isSpinning = false
+        checkWin()
+    end
+
+    local animationThread = main:addThread()
+    animationThread:start(animate)
+end
+
+-- Spin button click event
+spinButton:onClick(function()
+    spin()
+end)
+
+
+
+-- Start the program
+basalt.autoUpdate()
                 setSlotSymbol(slotBox2, slotLabel2, slot2)
             end
             slot3 = symbols[math.random(1, #symbols)]
