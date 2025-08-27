@@ -202,9 +202,10 @@ local function drawUI(resultText, resultColor)
     monitor.setTextColor(colors.white)
     monitor.setBackgroundColor(colors.green)
     monitor.write("SPIN!")
-    -- Einsatz-Anzeige
+    -- Einsatz-Anzeige + Bestand
     local einsatzVal = tonumber(_G.einsatz) or 0
-    local einsatzText = "Einsatz: " .. tostring(einsatzVal)
+    local bestand = countItemInChest(CHEST_EINSATZ, EINSATZ_ITEM)
+    local einsatzText = "Einsatz: " .. tostring(einsatzVal) .. "   Bestand: " .. tostring(bestand)
     monitor.setCursorPos(math.floor((w - #einsatzText) / 2) + 1, einsatzLabelY)
     monitor.setTextColor(colors.cyan)
     monitor.setBackgroundColor(colors.black)
