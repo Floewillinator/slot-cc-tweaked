@@ -37,21 +37,27 @@ local title = main:addLabel()
     :setForeground(colors.yellow)
 
 -- Create slot display boxes - make them bigger to better fit images
+local boxW, boxH = 13, 11
+local gap = 4
+local totalWidth = boxW * 3 + gap * 2
+local xStart = math.floor((w - totalWidth) / 2) + 1
+local yStart = math.floor((h - boxH) / 2) + 1
+
 local slotBox1 = main:addFrame()
-    :setPosition(3, 6)
-    :setSize(10, 8)
+    :setPosition(xStart, yStart)
+    :setSize(boxW, boxH)
     :setBackground(colors.white)
     :setBorder(colors.gray)
 
 local slotBox2 = main:addFrame()
-    :setPosition(14, 6)
-    :setSize(10, 8)
+    :setPosition(xStart + boxW + gap, yStart)
+    :setSize(boxW, boxH)
     :setBackground(colors.white)
     :setBorder(colors.gray)
 
 local slotBox3 = main:addFrame()
-    :setPosition(25, 6)
-    :setSize(10, 8)
+    :setPosition(xStart + (boxW + gap) * 2, yStart)
+    :setSize(boxW, boxH)
     :setBackground(colors.white)
     :setBorder(colors.gray)
 
@@ -104,29 +110,9 @@ end
 
 setMonitorPalette(monitor)
 
--- Utility: Print all .bimg files in current directory for debugging
-local function debugListBimgFiles()
-    local currentDir = shell.dir and shell.dir() or "."
-    print("DEBUG: Listing .bimg files in: " .. currentDir)
-    local found = false
-    for _, name in ipairs(fs.list(currentDir)) do
-        print("DEBUG: File: " .. name)
-        if name:lower():match("%.bimg$") then
-            print(" - " .. name)
-            found = true
-        end
-    end
-    if not found then
-        print("No .bimg files found in: " .. currentDir)
-    end
-end
-
-debugListBimgFiles()
-
--- Funktion: NFP laden und als "Pixelgrafik" in SlotBox anzeigen (wie in show_cherry_bimg.lua)
+-- Funktion: NFP laden und als "Pixelgrafik" in SlotBox anzeigen (angepasst für 3x3 Monitor, nutzt gesamten Screen)
 local function setSlotSymbol(slotBox, slotLabel, symbolName)
     local nfpFile = symbolName .. ".nfp"
-    -- Suche im aktuellen Arbeitsverzeichnis
     local dir = shell and shell.dir and shell.dir() or "."
     local files = fs.list(dir)
     local foundFile = nil
@@ -138,7 +124,6 @@ local function setSlotSymbol(slotBox, slotLabel, symbolName)
     end
     slotBox:removeChildren()
     if not foundFile or not fs.exists(foundFile) then
-        -- Fallback: ASCII-Text
         slotBox:addLabel()
             :setText("???")
             :setForeground(colors.red)
@@ -147,7 +132,6 @@ local function setSlotSymbol(slotBox, slotLabel, symbolName)
         return
     end
 
-    -- NFP laden
     local nfpLines = {}
     local file = fs.open(foundFile, "r")
     while true do
@@ -157,23 +141,22 @@ local function setSlotSymbol(slotBox, slotLabel, symbolName)
     end
     file.close()
 
-    -- SlotBox-Größe (wie im Frame)
+    -- Für 3x3 Monitor: SlotBox-Größe proportional größer wählen
     local boxW, boxH = slotBox:getSize()
+    -- Wenn der Monitor sehr groß ist, nutze die tatsächliche SlotBox-Größe
+    -- (z.B. 13x11 bei 3x3 Monitoren, siehe show_cherry_bimg)
     local fw = #(nfpLines[1] or "")
     local fh = #nfpLines
     if fw == 0 or fh == 0 then return end
 
-    -- Helper: Convert char to color (0-9,a-f)
     local function charToColor(c)
         local n = tonumber(c, 16)
         if n == nil then return colors.black end
         return 2 ^ n
     end
 
-    -- Ermittle das Monitor-Objekt (direkt aus main, nicht aus slotBox)
     local win = monitor
     local absX, absY = slotBox:getPosition()
-    -- Pixelgrafik direkt auf den Monitor zeichnen
     for fy = 1, fh do
         local line = nfpLines[fy]
         local yStart = math.floor((fy - 1) * boxH / fh) + 1
@@ -292,3 +275,4 @@ end)
 
 -- Start the program
 basalt.autoUpdate()
+
