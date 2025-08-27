@@ -54,7 +54,7 @@ local text = frame[1] or {}
 local fg = frame[2] or {}
 local bg = frame[3] or {}
 
--- Helper: Convert char to color
+-- Helper: Convert char to color (accepts 0-9, a-f, fallback to black)
 local function charToColor(c)
     local n = tonumber(c, 16)
     if n == nil then return colors.black end
@@ -72,12 +72,18 @@ local function drawFrame(monitor, x0, y0)
         local bgLine = bg[y] or ""
         for x = 1, #t do
             local ch = t:sub(x, x)
-            local fgCol = charToColor(fgLine:sub(x, x))
-            local bgCol = charToColor(bgLine:sub(x, x))
-            monitor.setCursorPos(x0 + x - 1, y0 + y - 1)
-            monitor.setTextColor(fgCol)
-            monitor.setBackgroundColor(bgCol)
-            monitor.write(ch ~= " " and ch or " ")
+            -- If text is only spaces, draw a space with bg color only
+            if ch == " " then
+                monitor.setCursorPos(x0 + x - 1, y0 + y - 1)
+                monitor.setTextColor(colors.white)
+                monitor.setBackgroundColor(charToColor(bgLine:sub(x, x)))
+                monitor.write(" ")
+            else
+                monitor.setCursorPos(x0 + x - 1, y0 + y - 1)
+                monitor.setTextColor(charToColor(fgLine:sub(x, x)))
+                monitor.setBackgroundColor(charToColor(bgLine:sub(x, x)))
+                monitor.write(ch)
+            end
         end
     end
     monitor.setCursorPos(1, 1)
