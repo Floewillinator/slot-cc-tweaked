@@ -11,13 +11,16 @@ local symbols = {"cherry", "lemon", "bell", "pineapple", "seven"}
 local slot1, slot2, slot3 = "cherry", "lemon", "bell"
 local isSpinning = false
 
--- Slotbox-Layout (weiter nach unten schieben, Platz für Auszahlungstabelle oben)
+-- Slotbox-Layout (zentriert die Slot-Symbole korrekt)
 local boxW, boxH = 13, 11
 local gap = 4
 local totalWidth = boxW * 3 + gap * 2
 local auszahlungY = 2 -- Startzeile für Auszahlungstabelle
 local auszahlungHeight = 5 -- Zeilen für Auszahlungstabelle
 local yStart = auszahlungY + auszahlungHeight + 1
+
+-- Korrigiere xStart für echte horizontale Zentrierung
+local xStart = math.floor((w - totalWidth) / 2) + 1
 
 -- Button-Layout (weiter nach unten)
 local buttonW, buttonH = math.max(18, math.floor(w * 0.5)), 3
@@ -148,7 +151,7 @@ local function drawUI(resultText, resultColor)
     monitor.clear()
     -- Auszahlungstabelle oben
     drawAuszahlungstabelle()
-    -- Slotboxes
+    -- Slotboxes (jetzt mit korrekt berechnetem xStart)
     local safe_xStart = tonumber(xStart) or 1
     local safe_yStart = tonumber(yStart) or 1
     local safe_boxW = tonumber(boxW) or 1
