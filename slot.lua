@@ -174,19 +174,6 @@ local function drawLogo()
     end
 end
 
--- Hilfsfunktion: Zählt Items in einer Chest (fix: nutze .getItemDetail statt .list für modded Chests)
-local function countItemInChest(chest, itemName)
-    if not chest then return 0 end
-    local total = 0
-    for slot = 1, chest.size() do
-        local item = chest.getItemDetail(slot)
-        if item and item.name == itemName then
-            total = total + item.count
-        end
-    end
-    return total
-end
-
 -- Draw slot UI (symbols, button, einsatz, result, auszahlungstabelle)
 local function drawUI(resultText, resultColor)
     monitor.setBackgroundColor(colors.black)
@@ -215,10 +202,9 @@ local function drawUI(resultText, resultColor)
     monitor.setTextColor(colors.white)
     monitor.setBackgroundColor(colors.green)
     monitor.write("SPIN!")
-    -- Einsatz-Anzeige + Bestand
+    -- Einsatz-Anzeige
     local einsatzVal = tonumber(_G.einsatz) or 0
-    local bestand = countItemInChest(CHEST_EINSATZ, EINSATZ_ITEM)
-    local einsatzText = "Einsatz: " .. tostring(einsatzVal) .. "   Bestand: " .. tostring(bestand)
+    local einsatzText = "Einsatz: " .. tostring(einsatzVal)
     monitor.setCursorPos(math.floor((w - #einsatzText) / 2) + 1, einsatzLabelY)
     monitor.setTextColor(colors.cyan)
     monitor.setBackgroundColor(colors.black)
@@ -298,7 +284,17 @@ local CHEST_AUSGABE = peripheral.wrap("left")
 
 
 
-
+-- Hilfsfunktion: Zählt Items in einer Chest
+local function countItemInChest(chest, itemName)
+    if not chest then return 0 end
+    local total = 0
+    for slot, item in pairs(chest.list()) do
+        if item.name == itemName then
+            total = total + item.count
+        end
+    end
+    return total
+end
 
 -- Hilfsfunktion: Entnimmt eine bestimmte Anzahl Items aus einer Chest
 local function takeItemFromChest(chest, itemName, count)
