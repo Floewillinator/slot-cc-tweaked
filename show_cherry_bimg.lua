@@ -1,4 +1,4 @@
--- Zeigt cherry.bimg auf bis zu 4 Monitoren an (Basalt nicht benötigt)
+-- Zeigt cherry.bimg auf bis zu 4 Monitoren an (robuste Dateisuche, kein Basalt)
 
 local bimgFile = "cherry.bimg"
 
@@ -16,30 +16,44 @@ if #monitors == 0 then
     return
 end
 
--- Load BIMG file (as JSON)
-if not fs.exists(bimgFile) then
-    print("Datei cherry.bimg nicht gefunden!")
+-- Robust: Suche nach cherry.bimg in verschiedenen Schreibweisen
+local function findBimgFile()
+    local files = fs.list(".")
+    for _, f in ipairs(files) do
+        if f:lower() == "cherry.bimg" then
+            return f
+        end
+    end
+    return nil
+end
+
+local actualBimgFile = findBimgFile()
+if not actualBimgFile then
+    print("Datei cherry.bimg nicht gefunden! (Groß-/Kleinschreibung prüfen)")
+    print("Gefundene Dateien im Ordner:")
+    for _, f in ipairs(fs.list(".")) do print(" - " .. f) end
     return
 end
 
-local file = fs.open(bimgFile, "r")
+-- Load BIMG file (as JSON)
+local file = fs.open(actualBimgFile, "r")
 local content = file.readAll()
 file.close()
 
 local ok, bimg = pcall(textutils.unserializeJSON, content)
-if not ok or type(bimg) ~= "table" or not bimg.frames or not bimg.frames[1] then
-    print("Fehler beim Parsen von cherry.bimg!")
+if not ok or type(bimg) ~= "table" or not bimg[1] then
+    print("Fehler beim Parsen von " .. actualBimgFile .. "!")
     return
 end
 
-local frame = bimg.frames[1]
-local text = frame.text or {}
-local fg = frame.fg or {}
-local bg = frame.bg or {}
+local frame = bimg[1]
+local text = frame[1] or {}
+local fg = frame[2] or {}
+local bg = frame[3] or {}
 
 -- Helper: Convert char to color
 local function charToColor(c)
-    local n = tonumber(c)
+    local n = tonumber(c, 16)
     if n == nil then return colors.black end
     return 2 ^ n
 end
@@ -78,6 +92,6 @@ for i, mon in ipairs(monitors) do
     drawFrame(mon, x0, y0)
 end
 
-print("cherry.bimg wurde auf " .. #monitors .. " Monitor(en) angezeigt.")
+print(actualBimgFile .. " wurde auf " .. #monitors .. " Monitor(en) angezeigt.")
 print("Drücke eine Taste zum Beenden.")
 os.pullEvent("key")
