@@ -33,33 +33,28 @@ local isSpinning = false
 -- Create title
 local title = main:addLabel()
     :setText("SLOT MACHINE")
-    :setPosition(14, 2)
+    :setPosition(math.floor((w - 13) / 2) + 1, 2) -- 13 = Länge von "SLOT MACHINE"
     :setForeground(colors.yellow)
 
--- Create slot display boxes - make them bigger to better fit images
+-- Passe SlotBox-Größen und Positionen für 3x3 Monitor an (z.B. 13x11, gap=4)
 local boxW, boxH = 13, 11
 local gap = 4
 local totalWidth = boxW * 3 + gap * 2
 local xStart = math.floor((w - totalWidth) / 2) + 1
 local yStart = math.floor((h - boxH) / 2) + 1
 
+-- Create slot display boxes - make them transparent (no background/border) for direct NFP rendering
 local slotBox1 = main:addFrame()
     :setPosition(xStart, yStart)
     :setSize(boxW, boxH)
-    :setBackground(colors.white)
-    :setBorder(colors.gray)
 
 local slotBox2 = main:addFrame()
     :setPosition(xStart + boxW + gap, yStart)
     :setSize(boxW, boxH)
-    :setBackground(colors.white)
-    :setBorder(colors.gray)
 
 local slotBox3 = main:addFrame()
     :setPosition(xStart + (boxW + gap) * 2, yStart)
     :setSize(boxW, boxH)
-    :setBackground(colors.white)
-    :setBorder(colors.gray)
 
 -- Create fallback labels for each slot (will be used if image loading fails)
 local slotLabel1 = slotBox1:addLabel()
@@ -182,18 +177,23 @@ setSlotSymbol(slotBox1, slotLabel1, slot1)
 setSlotSymbol(slotBox2, slotLabel2, slot2)
 setSlotSymbol(slotBox3, slotLabel3, slot3)
 
+-- Passe Spin-Button an (zentriert unter den Slotboxen, größer)
+local buttonW, buttonH = math.max(18, math.floor(w * 0.5)), 3
+local buttonX = math.floor((w - buttonW) / 2) + 1
+local buttonY = yStart + boxH + 2
+
 -- Create spin button
 local spinButton = main:addButton()
     :setText("SPIN!")
-    :setPosition(12, 15)
-    :setSize(12, 3)
+    :setPosition(buttonX, buttonY)
+    :setSize(buttonW, buttonH)
     :setBackground(colors.green)
     :setForeground(colors.white)
 
--- Create result display
+-- Passe Ergebnis-Anzeige an (zentriert unter dem Button)
 local resultLabel = main:addLabel()
     :setText("")
-    :setPosition(5, 20)
+    :setPosition(math.floor((w - 24) / 2) + 1, buttonY + buttonH + 1)
     :setForeground(colors.yellow)
 
 -- Function to check for win
@@ -275,4 +275,3 @@ end)
 
 -- Start the program
 basalt.autoUpdate()
-
