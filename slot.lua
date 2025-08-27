@@ -11,13 +11,21 @@ local symbols = {"cherry", "lemon", "bell", "pineapple", "seven"}
 local slot1, slot2, slot3 = "cherry", "lemon", "bell"
 local isSpinning = false
 
--- Slotbox-Layout (zentriert die Slot-Symbole korrekt)
+-- Slotbox-Layout (weiter nach unten schieben, Platz für Logo und Auszahlungstabelle oben)
 local boxW, boxH = 13, 11
 local gap = 4
 local totalWidth = boxW * 3 + gap * 2
-local auszahlungY = 2 -- Startzeile für Auszahlungstabelle
+
+-- Logo (ASCII-Art, 3 Zeilen)
+local logoLines = {
+    "    █████  ████  ███ ",
+    "   █  █ █  █  █ █  █",
+    "   ████ █  ████ ███ "
+}
+local logoHeight = #logoLines
+local auszahlungY = logoHeight + 2 -- Startzeile für Auszahlungstabelle (nach Logo)
 local auszahlungHeight = 5 -- Zeilen für Auszahlungstabelle
-local yStart = auszahlungY + auszahlungHeight + 1
+local yStart = auszahlungY + auszahlungHeight + 2 -- +2 für Abstand
 
 -- Korrigiere xStart für echte horizontale Zentrierung
 local xStart = math.floor((w - totalWidth) / 2) + 1
@@ -145,11 +153,31 @@ local function drawAuszahlungstabelle()
     end
 end
 
+-- Draw logo at the top
+local function drawLogo()
+    local logoColor = colors.red
+    local nameText = "AMK Slot"
+    local nameX = math.floor((w - #nameText) / 2) + 1
+    monitor.setCursorPos(nameX, 1)
+    monitor.setTextColor(colors.yellow)
+    monitor.setBackgroundColor(colors.black)
+    monitor.write(nameText)
+    for i, line in ipairs(logoLines) do
+        local x = math.floor((w - #line) / 2) + 1
+        monitor.setCursorPos(x, 1 + i)
+        monitor.setTextColor(logoColor)
+        monitor.setBackgroundColor(colors.black)
+        monitor.write(line)
+    end
+end
+
 -- Draw slot UI (symbols, button, einsatz, result, auszahlungstabelle)
 local function drawUI(resultText, resultColor)
     monitor.setBackgroundColor(colors.black)
     monitor.clear()
-    -- Auszahlungstabelle oben
+    -- Logo oben
+    drawLogo()
+    -- Auszahlungstabelle darunter
     drawAuszahlungstabelle()
     -- Slotboxes (jetzt mit korrekt berechnetem xStart)
     local safe_xStart = tonumber(xStart) or 1
