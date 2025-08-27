@@ -16,11 +16,11 @@ local boxW, boxH = 13, 11
 local gap = 4
 local totalWidth = boxW * 3 + gap * 2
 
--- Logo (ASCII-Art, 3 Zeilen, jetzt nur ASCII für saubere Darstellung)
+-- Logo (ASCII-Art, 3 Zeilen, jetzt "AMK" in ASCII, gelb)
 local logoLines = {
-    "   ___  __  __ _  _     ",
-    "  / _ \\|  \\/  | || |    ",
-    " | (_) | |\\/| | || |_   "
+    "   ███    ████   ██  ██ ",
+    "  ██ ██  ██  ██  ██ ██  ",
+    "  ██ ██  ████   ██  ██  "
 }
 local logoHeight = #logoLines
 local auszahlungY = logoHeight + 2 -- Startzeile für Auszahlungstabelle (nach Logo)
@@ -153,9 +153,8 @@ local function drawAuszahlungstabelle()
     end
 end
 
--- Draw logo at the top (ASCII, keine Sonderzeichen)
+-- Draw logo at the top (ASCII "AMK" in gelb)
 local function drawLogo()
-    local logoColor = colors.red
     local nameText = "AMK Slot"
     local nameX = math.floor((w - #nameText) / 2) + 1
     monitor.setCursorPos(nameX, 1)
@@ -165,7 +164,7 @@ local function drawLogo()
     for i, line in ipairs(logoLines) do
         local x = math.floor((w - #line) / 2) + 1
         monitor.setCursorPos(x, 1 + i)
-        monitor.setTextColor(logoColor)
+        monitor.setTextColor(colors.yellow)
         monitor.setBackgroundColor(colors.black)
         monitor.write(line)
     end
