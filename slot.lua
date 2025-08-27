@@ -112,11 +112,11 @@ end
 local function drawAuszahlungstabelle()
     local tabelle = {
         {"Symbol", "Multiplikator"},
-        {"Kirsche", "x" .. symbolValues.cherry},
-        {"Zitrone", "x" .. symbolValues.lemon},
-        {"Glocke", "x" .. symbolValues.bell},
-        {"Ananas", "x" .. symbolValues.pineapple},
-        {"Sieben", "x" .. symbolValues.seven}
+        {"Kirsche", "x" .. (symbolValues.cherry or "?")},
+        {"Zitrone", "x" .. (symbolValues.lemon or "?")},
+        {"Glocke", "x" .. (symbolValues.bell or "?")},
+        {"Ananas", "x" .. (symbolValues.pineapple or "?")},
+        {"Sieben", "x" .. (symbolValues.seven or "?")}
     }
     local startX = math.floor((w - 22) / 2) + 1
     for i, row in ipairs(tabelle) do
