@@ -11,20 +11,26 @@ local symbols = {"cherry", "lemon", "bell", "pineapple", "seven"}
 local slot1, slot2, slot3 = "cherry", "lemon", "bell"
 local isSpinning = false
 
--- Slotbox-Layout (wie in show_cherry_bimg.lua)
+-- Slotbox-Layout (weiter nach oben schieben)
 local boxW, boxH = 13, 11
 local gap = 4
 local totalWidth = boxW * 3 + gap * 2
 local xStart = math.floor((w - totalWidth) / 2) + 1
-local yStart = math.floor((h - boxH) / 2) + 1
+local yStart = 3 -- war: math.floor((h - boxH) / 2) + 1
 
--- Button-Layout
+-- Button-Layout (weiter nach unten)
 local buttonW, buttonH = math.max(18, math.floor(w * 0.5)), 3
 local buttonX = math.floor((w - buttonW) / 2) + 1
 local buttonY = yStart + boxH + 2
 
--- Result-Label
-local resultY = buttonY + buttonH + 1
+-- Einsatz-Anzeige und -Button darunter
+local einsatzLabelY = buttonY + buttonH + 1
+local einsatzButtonW, einsatzButtonH = 7, 3
+local einsatzButtonX = math.floor((w - einsatzButtonW) / 2) + 1
+local einsatzButtonY = einsatzLabelY + 2
+
+-- Result-Label darunter
+local resultY = einsatzButtonY + einsatzButtonH + 1
 
 -- Farbpalette setzen (wichtig für NFP)
 local function setMonitorPalette(monitor)
@@ -105,19 +111,19 @@ local function drawNfpSymbol(symbolName, x0, y0, boxW, boxH)
     end
 end
 
--- Draw slot UI (symbols, button, result)
+-- Draw slot UI (symbols, button, einsatz, result)
 local function drawUI(resultText, resultColor)
     monitor.setBackgroundColor(colors.black)
     monitor.clear()
     -- Title
-    monitor.setCursorPos(math.floor((w - 13) / 2) + 1, 2)
+    monitor.setCursorPos(math.floor((w - 13) / 2) + 1, 1)
     monitor.setTextColor(colors.yellow)
     monitor.write("SLOT MACHINE")
     -- Slotboxes
     drawNfpSymbol(slot1, xStart, yStart, boxW, boxH)
     drawNfpSymbol(slot2, xStart + boxW + gap, yStart, boxW, boxH)
     drawNfpSymbol(slot3, xStart + (boxW + gap) * 2, yStart, boxW, boxH)
-    -- Button
+    -- Spin Button
     for by = 0, buttonH - 1 do
         monitor.setCursorPos(buttonX, buttonY + by)
         monitor.setBackgroundColor(colors.green)
@@ -128,6 +134,23 @@ local function drawUI(resultText, resultColor)
     monitor.setTextColor(colors.white)
     monitor.setBackgroundColor(colors.green)
     monitor.write("SPIN!")
+    -- Einsatz-Anzeige
+    local einsatzText = "Einsatz: " .. tostring(EINSATZ_ANZAHL)
+    monitor.setCursorPos(math.floor((w - #einsatzText) / 2) + 1, einsatzLabelY)
+    monitor.setTextColor(colors.cyan)
+    monitor.setBackgroundColor(colors.black)
+    monitor.write(einsatzText)
+    -- Einsatz-Button
+    for by = 0, einsatzButtonH - 1 do
+        monitor.setCursorPos(einsatzButtonX, einsatzButtonY + by)
+        monitor.setBackgroundColor(colors.blue)
+        monitor.setTextColor(colors.white)
+        monitor.write(string.rep(" ", einsatzButtonW))
+    end
+    monitor.setCursorPos(einsatzButtonX + 1, einsatzButtonY + math.floor(einsatzButtonH / 2))
+    monitor.setTextColor(colors.white)
+    monitor.setBackgroundColor(colors.blue)
+    monitor.write("EINSATZ")
     -- Result
     if resultText then
         monitor.setCursorPos(math.floor((w - #resultText) / 2) + 1, resultY)
@@ -137,9 +160,14 @@ local function drawUI(resultText, resultColor)
     end
 end
 
--- Check if (mx, my) is inside the button
+-- Check if (mx, my) is inside the spin button
 local function isInButton(mx, my)
     return mx >= buttonX and mx < buttonX + buttonW and my >= buttonY and my < buttonY + buttonH
+end
+
+-- Check if (mx, my) is inside the einsatz button
+local function isInEinsatzButton(mx, my)
+    return mx >= einsatzButtonX and mx < einsatzButtonX + einsatzButtonW and my >= einsatzButtonY and my < einsatzButtonY + einsatzButtonH
 end
 
 -- Check for win
@@ -178,9 +206,12 @@ end
 -- Einsatz-Konfiguration
 local EINSATZ_ITEM = "minecraft:emerald_block"
 local EINSATZ_ANZAHL = 5
-local CHEST_EINSATZ = peripheral.wrap("front") -- Einsatz-Quelle (normale Chest vorne)
-local CHEST_AUSZAHLUNG = peripheral.wrap("back") -- Ziel (Oak Diamond Chest hinten)
-local CHEST_AUSGABE = peripheral.wrap("left") -- Gewinn-Ausgabe (links)
+local EINSATZ_MIN = 1
+local EINSATZ_MAX = 20
+
+local CHEST_EINSATZ = peripheral.wrap("front")
+local CHEST_AUSZAHLUNG = peripheral.wrap("back")
+local CHEST_AUSGABE = peripheral.wrap("left")
 
 -- Symbolwerte-Tabelle (Multiplikator für Gewinn, kann mit variablem Einsatz umgehen)
 local symbolValues = {
@@ -279,17 +310,26 @@ local function spin()
     end
 end
 
--- Main event loop
+-- Main event loop (mit Einsatz-Button)
 drawUI()
 while true do
     local e, side, x, y = os.pullEvent()
     if e == "monitor_touch" then
         if isInButton(x, y) and not isSpinning then
             spin()
+        elseif isInEinsatzButton(x, y) and not isSpinning then
+            -- Einsatz erhöhen (1-20, wrap-around)
+            EINSATZ_ANZAHL = EINSATZ_ANZAHL + 1
+            if EINSATZ_ANZAHL > EINSATZ_MAX then EINSATZ_ANZAHL = EINSATZ_MIN end
+            drawUI()
         end
     elseif e == "mouse_click" then
         if isInButton(x, y) and not isSpinning then
             spin()
+        elseif isInEinsatzButton(x, y) and not isSpinning then
+            EINSATZ_ANZAHL = EINSATZ_ANZAHL + 1
+            if EINSATZ_ANZAHL > EINSATZ_MAX then EINSATZ_ANZAHL = EINSATZ_MIN end
+            drawUI()
         end
     end
 end
